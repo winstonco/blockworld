@@ -17,3 +17,13 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
+#crosshair {
+  min-width: 4px;
+  height: 4px;
+  background: white;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+}

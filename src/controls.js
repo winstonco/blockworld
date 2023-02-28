@@ -1,4 +1,4 @@
-import { PerspectiveCamera, Vector3 } from 'three';
+import { PerspectiveCamera, Vector2, Vector3 } from 'three';
 
 const controlKeys = [
   'ArrowLeft',
@@ -16,7 +16,11 @@ const controlKeys = [
 ];
 const controlKeysPressed = {};
 
-const mouseMovements = [0, 0];
+let mouseMovements = [0, 0];
+
+const moveScalar = 0.3;
+const rotateScalar = 2;
+const maxSpeed = 10;
 
 /**
  * @param {KeyboardEvent} ev
@@ -36,84 +40,83 @@ const handleKeyUp = (ev) => {
 document.addEventListener('keydown', handleKeyDown);
 document.addEventListener('keyup', handleKeyUp);
 
-let directionVector = new Vector3();
-
 /**
  * @param {PerspectiveCamera} camera
  */
 const controlCamera = (camera) => {
-  const moveScalar = 0.1;
-  const rotateScalar = 0.001;
-
-  directionVector = camera.getWorldDirection(new Vector3()).normalize();
-
-  const vx = directionVector.x;
-  const vz = directionVector.z;
+  const cameraDirection = camera.getWorldDirection(new Vector3());
+  const cameraDirectionFlat = cameraDirection.clone().setY(0);
+  const { x: vx, z: vz } = cameraDirectionFlat;
+  const cameraAngle =
+    cameraDirection.y < 0
+      ? (cameraDirectionFlat.angleTo(cameraDirection) * -180) / Math.PI
+      : (cameraDirectionFlat.angleTo(cameraDirection) * 180) / Math.PI;
+  const motionVector = new Vector3(0, 0, 0);
 
   // <-> mouse
   if (mouseMovements[0] !== 0) {
     camera.rotateOnWorldAxis(
       new Vector3(0, 1, 0),
-      mouseMovements[0] * rotateScalar * -1
+      (mouseMovements[0] * rotateScalar * -1) / window.innerWidth
     );
   }
-
   // ^ v mouse
   if (mouseMovements[1] !== 0) {
-    camera.rotateX(mouseMovements[1] * rotateScalar * -1);
+    if (cameraAngle > -89) {
+      if (cameraAngle < 89) {
+        camera.rotateX(
+          (mouseMovements[1] * rotateScalar * -1) / window.innerHeight
+        );
+      } else {
+        camera.rotateX(-0.0001);
+      }
+    } else {
+      camera.rotateX(0.0001);
+    }
   }
 
+  /*
   // <-
   if (controlKeysPressed.ArrowLeft) {
     camera.rotateOnWorldAxis(new Vector3(0, 1, 0), rotateScalar);
   }
-
   // ^
   if (controlKeysPressed.ArrowUp) {
     camera.rotateX(rotateScalar);
   }
-
   // ->
   if (controlKeysPressed.ArrowRight) {
     camera.rotateOnWorldAxis(new Vector3(0, 1, 0), rotateScalar * -1);
   }
-
   // v
   if (controlKeysPressed.ArrowDown) {
     camera.rotateX(rotateScalar * -1);
   }
+  */
 
   // w
   if (controlKeysPressed.w || controlKeysPressed.W) {
-    camera.position.x += vx * moveScalar;
-    camera.position.z += vz * moveScalar;
+    motionVector.add(new Vector3(vx, 0, vz));
   }
   // a
   if (controlKeysPressed.a || controlKeysPressed.A) {
-    const leftVector = directionVector.cross(new Vector3(0, -1, 0));
-    const vx = leftVector.x;
-    const vz = leftVector.z;
-
-    camera.position.x += vx * moveScalar;
-    camera.position.z += vz * moveScalar;
+    motionVector.add(new Vector3(vz, 0, vx * -1));
   }
   // s
   if (controlKeysPressed.s || controlKeysPressed.S) {
-    camera.position.x += vx * moveScalar * -1;
-    camera.position.z += vz * moveScalar * -1;
+    motionVector.add(new Vector3(vx * -1, 0, vz * -1));
   }
   // d
   if (controlKeysPressed.d || controlKeysPressed.D) {
-    const rightVector = directionVector.cross(new Vector3(0, 1, 0));
-    const vx = rightVector.x;
-    const vz = rightVector.z;
-    camera.position.x += vx * moveScalar;
-    camera.position.z += vz * moveScalar;
+    motionVector.add(new Vector3(vz * -1, 0, vx));
   }
 
+  camera.position.add(
+    motionVector.normalize().multiplyScalar(moveScalar).clampLength(0, maxSpeed)
+  );
+
   // resets
-  mouseMovements[0] = 0;
-  mouseMovements[1] = 0;
+  mouseMovements = [0, 0];
 };
 
 let mouseIsLocked = false;
@@ -141,11 +144,10 @@ const unlockMouse = () => {
  */
 const handleMouseMove = (ev) => {
   if (mouseIsLocked) {
-    mouseMovements[0] = ev.movementX;
-    mouseMovements[1] = ev.movementY;
+    mouseMovements = [ev.movementX, ev.movementY];
+    // console.log(mouseMovements);
   } else {
-    mouseMovements[0] = 0;
-    mouseMovements[1] = 0;
+    mouseMovements = [0, 0];
   }
 };
 
