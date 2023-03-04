@@ -1,12 +1,17 @@
-import { Vector2 } from 'three';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
+import { PerspectiveCamera, Scene, Vector2 } from 'three';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 
 import lookingAt from './helpers/lookingAt';
 
-let renderPass, outlinePass;
+let renderPass: RenderPass, outlinePass: OutlinePass;
 
-export const initPost = (scene, camera, composer) => {
+export const initPost = (
+  scene: Scene,
+  camera: PerspectiveCamera,
+  composer: EffectComposer
+) => {
   renderPass = new RenderPass(scene, camera);
   composer.addPass(renderPass);
   outlinePass = new OutlinePass(

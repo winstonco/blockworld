@@ -1,14 +1,13 @@
-import { Raycaster, Object3D } from 'three';
+import { Raycaster, Object3D, PerspectiveCamera, Scene } from 'three';
 
-let lastLookedAt = null;
+let lastLookedAt: Object3D | null = null;
 
-/**
- * @param {PerspectiveCamera} camera
- * @param {Object3D[]} scene
- * @param {(target: Object3D) => void} onSee
- * @param {(target: Object3D) => void} onUnSee
- */
-const lookingAt = (camera, scene, onSee = () => {}, onUnSee = () => {}) => {
+const lookingAt = (
+  camera: PerspectiveCamera,
+  scene: Scene,
+  onSee: (target: Object3D) => void = () => {},
+  onUnSee: (target: Object3D) => void = () => {}
+) => {
   const raycaster = new Raycaster();
   raycaster.setFromCamera({ x: 0, y: 0 }, camera);
   const intersects = raycaster.intersectObjects(scene.children);
